@@ -1,0 +1,73 @@
+thrust_allocation_node:
+  ros__parameters:
+    publish_rate: 10.0 # Hz
+    min_force: -500
+    min_torque: -500
+    max_rpm: 1000.0    # important
+    min_rpm: -1000.0
+    max_force: 500         # increase this value?
+    max_torque: 500       # 180.1 old parameter
+    dt: 0.1
+    single_thruster_min_force: -500.0
+    single_thruster_max_force: 500.0
+    scaling_factor: 3.5         # 3.5    # factor to increase the motor power to deal with windy and current
+    river_factor: 1.2           # 1.4    #navigate carefully
+    active_modes: ['autoteaming_joystick', 'joystick', 'dp', 'docking', 'aferry_dp', 'aferry_wrench', 'transit','manoeuvring_experiments']
+    configuration:
+      Lx: 1.80
+      Ly: 0.8
+      max_thrust: 500.0
+      min_thrust: -294.0
+      standard:
+        mean_thrust: [0, 0, 0, 0]
+        home_angle: [0, 0, 0, 0]
+      docking:
+        mean_thrust: [200, 200, 200, 200] # In docking mode
+        home_angle: [3.14159, 0., 0., 0.]
+      nonrev:
+        mean_thrust: [100, 100, 100, 100]
+        home_angle: [3.14159, 0., 0., 0.]
+
+    costs:
+      standard:
+        angle_change: [1000000, 1000000,1000000, 1000000]
+        thrust_usage: [10, 10,10, 10]
+        thrust_change: [10, 10,10, 10]
+        home_angle_deviation: [1000000, 1000000,1000000, 1000000]
+        reverse_running: [1, 1,1, 1]
+        mean_thrust_deviation: [0, 0,0, 0]
+      docking:
+        angle_change: [500000, 500000,500000, 500000]
+        thrust_usage: [1, 1,1, 1]
+        thrust_change: [3, 3,3, 3]
+        home_angle_deviation: [2000000, 2000000,2000000, 2000000]
+        reverse_running: [100, 100,100, 100]
+        mean_thrust_deviation: [10, 10,10, 10]
+      nonrev:
+        angle_change: [1000000, 1000000,1000000, 1000000]
+        thrust_usage: [10, 10,10, 10]
+        thrust_change: [1, 1,1, 1]
+        home_angle_deviation: [100000, 100000,100000, 100000]
+        mean_thrust_deviation: [10, 10,10, 10]
+
+    rpm_thrust_mapping:  #Motor properties (will need tunning)
+      p_propeller_rpm_to_thrust: [2.3203, 0.119, 1.0e-04, 5.0e-07, -4.0e-11,-2.0e-13]
+      p_thrust_to_propeller_rpm: [0.0, 5.3355,-0.0047, -6.0e-05, 1.0e-07, 3.0e-10, -6.0e-13]
+      p_propeller_rpm_to_command: 1.0  #0.841403
+
+    maneuvering:
+      gamma: 15.0
+      mu: 5.0
+      rho: 1.0
+      zeta: 0.05
+      rate_limit: 10.0
+      theta_min: -100.0
+      theta_max: 100.0
+      lambda: 0.0
+      power_management: true
+
+    qp:
+      u_bound: 500.0
+      max_rate: 1.0
+      max_force_rate: 100.0
+      beta: 1.1
