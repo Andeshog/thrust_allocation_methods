@@ -16,11 +16,11 @@ ManeuveringAllocator::ManeuveringAllocator(ManeuveringParams& params)
     {
     c_ << 1.0, 1.0, 1.0, 1.0;
     w_matrix_.setIdentity();
-    min_forces_ << -300.0,  1.0, -300.0, -300.0,
-                    1.0,    1.0,   1.0, -300.0;
+    min_forces_ << -430.0,  0.1, -430.0, -430.0,
+                    0.1,    0.1,   0.1, -430.0;
 
-    max_forces_ <<  -1.0, 300.0,   -1.0,   -1.0,
-                    300.0, 300.0,  300.0,   -1.0;
+    max_forces_ <<  -0.1, 430.0,   -0.1,   -0.1,
+                    430.0, 430.0,  430.0,   -0.1;
     reference_angles_ <<  3*M_PI/4.0,  -3*M_PI/4.0,
                         M_PI/4.0,   -M_PI/4.0;
     constexpr double half_length = 1.8;
@@ -57,7 +57,7 @@ std::tuple<Eigen::Vector4d,Eigen::Vector4d,VecTau>
     ManeuveringAllocator::allocate(const std::array<double, 3>& tau_cmd, Eigen::VectorXd xi_p) {
     VecTau tau = VecTau::Zero();
     tau << tau_cmd[0], tau_cmd[1], tau_cmd[2];
-    //VecXi xi_p_eigen = T_pinv_ * tau;
+    // VecXi xi_p_eigen = T_pinv_ * tau;
     VecXi xi_p_eigen = xi_p;
     VecXi xi_p_dot = (xi_p_eigen - last_xi_p_) / dt_;
     last_xi_p_ = xi_p_eigen;
@@ -79,37 +79,29 @@ std::tuple<Eigen::Vector4d,Eigen::Vector4d,VecTau>
 
     for (int i=0;i<kNumThrusters;++i)
     {   
-        if (i == 0 || i == 1) {
-            const double fx = xi_(2*i);
-            const double fy = xi_(2*i+1);
+        const double fx = xi_(2*i);
+        const double fy = xi_(2*i+1);
 
-            alpha(i) = std::atan2(fy, fx);
-            u(i) = std::hypot(fx, fy);
-            if (alpha(i) > -M_PI/2.0 && alpha(i) < M_PI/2.0) {
-                if (alpha(i) < 0.0) {
-                    alpha(i) += M_PI;
-                }
-                else {
-                    alpha(i) -= M_PI;
-                }
-                u(i) = -u(i);
+        alpha(i) = std::atan2(fy, fx);
+        u(i) = std::hypot(fx, fy);
+
+        if ((i == 0 || i == 1) && fx > 0.0) { // Front thrusters negative thrust
+            if (alpha(i) < 0.0) {
+                alpha(i) += M_PI;
             }
+            else {
+                alpha(i) -= M_PI;
+            }
+            u(i) = -u(i);
         }
-        else {
-            const double fx = xi_(2*i);
-            const double fy = xi_(2*i+1);
-
-            alpha(i) = std::atan2(fy, fx);
-            u(i) = std::hypot(fx, fy);
-            if (alpha(i) < -M_PI/2.0 || alpha(i) > M_PI/2.0) {
-                if (alpha(i) < 0.0) {
-                    alpha(i) += M_PI;
-                }
-                else {
-                    alpha(i) -= M_PI;
-                }
-                u(i) = -u(i);
+        else if ((i == 2 || i == 3) && fx < 0.0) { // Rear thrusters negative thrust
+            if (alpha(i) < 0.0) {
+                alpha(i) += M_PI;
             }
+            else {
+                alpha(i) -= M_PI;
+            }
+            u(i) = -u(i);
         }
     }
 
@@ -119,14 +111,15 @@ std::tuple<Eigen::Vector4d,Eigen::Vector4d,VecTau>
 VecTheta ManeuveringAllocator::calculate_j_theta(const VecXi& xi_d) const {
     VecTheta j_theta = VecTheta::Zero();
 
-    const double a1_neg = 0.85;
-    const double a2_neg = 0.0083;
+    const double a1_pos = 0.85;
+    const double a2_pos = 0.0083;
 
-    const double a1_pos = -1.45;
-    const double a2_pos = 0.0115;
+    const double a1_neg = -1.45;
+    const double a2_neg = 0.0115;
 
     double a1;
     double a2;
+    double sign;
 
     for (int i=0;i<kNumThrusters;++i) {
         Eigen::Vector2d xi_di = xi_d.segment<2>(2*i);
@@ -142,34 +135,35 @@ VecTheta ManeuveringAllocator::calculate_j_theta(const VecXi& xi_d) const {
         }
         else {
             if (i == 2 || i == 3) { // Rear thrusters
-                double angle_i = std::atan2(xi_di(1), xi_di(0));
-                if (angle_i > -M_PI/2.0 && angle_i < M_PI/2.0) { // Positive thrust
+                if (xi_di(0) > 0) { // Positive thrust
                     a1 = a1_pos;
                     a2 = a2_pos;
+                    sign = 1.0;
                 }
                 else { // Negative thrust
                     a1 = a1_neg;
                     a2 = a2_neg;
+                    sign = -1.0;
                 }
             }
             else { // Front thrusters
-                double angle_i = std::atan2(xi_di(1), xi_di(0));
-                if (angle_i > -M_PI/2.0 && angle_i < M_PI/2.0) { // negative thrust
+                if (xi_di(0) < 0) { // negative thrust
                     a1 = a1_neg;
                     a2 = a2_neg;
+                    sign = -1.0;
                 }
                 else { // positive thrust
                     a1 = a1_pos;
                     a2 = a2_pos;
+                    sign = 1.0;
                 }
             }
             
             Eigen::Matrix<double, 2, kThetaSize> Q_i = q_matrix_.block<2, kThetaSize>(2*i, 0);
             double denom = xi_di_norm + 0.001;
-            j_theta += (a1 + 2.0*a2*xi_di_norm) * Q_i.transpose() * xi_di / denom;
+            j_theta += (a1 * sign + 2.0 * a2 * xi_di_norm) * Q_i.transpose() * xi_di / denom;
         }
     }
-    // spdlog::info("j_theta: {}", j_theta.transpose());
     return j_theta;
 }
 
@@ -196,14 +190,45 @@ VecXi ManeuveringAllocator::calculate_kappa(const VecXi& xi_tilde, const VecXi& 
     return kappa;
 }
 
-VecXi ManeuveringAllocator::cbf(const VecXi& u, double time_constant) const {
+VecXi ManeuveringAllocator::cbf(const VecXi& u,
+                                double time_constant) const
+{
+    constexpr double T_MAX  = 430.0;
+    const double     T_MAX2 = T_MAX * T_MAX;
+
     VecXi kappa = VecXi::Zero();
-    for (int i=0;i<kNumThrusters;++i) {
-        Eigen::Vector2d xi_i = xi_.segment<2>(2*i);
-        Eigen::Vector2d u_min = -time_constant * (xi_i - min_forces_.segment<2>(2*i));
-        Eigen::Vector2d u_max = time_constant * (max_forces_.segment<2>(2*i) - xi_i);
-        Eigen::Vector2d clipped = (u.segment<2>(2*i)).cwiseMin(u_max).cwiseMax(u_min);
-        kappa.segment<2>(2*i) = clipped;
+
+    for (int i = 0; i < kNumThrusters; ++i)
+    {
+        const Eigen::Vector2d xi_i = xi_.segment<2>(2 * i);
+        Eigen::Vector2d       du   = u.segment<2>(2 * i);
+
+        const double xi_norm2 = xi_i.squaredNorm();
+        const double h        = T_MAX2 - xi_norm2;
+
+        if (h < 0.0) {
+            du = -time_constant * xi_i;
+        } else {
+            const double dhdot = -2.0 * xi_i.dot(du);
+            const double rhs   = -2.0 * time_constant * h;
+            if (dhdot < rhs) {
+                const double alpha = (rhs - dhdot) / (2.0 * xi_norm2 + 1e-12);
+                du += alpha * xi_i;
+            }
+        }
+
+        Eigen::Vector2d xi_next = xi_i + du;
+        const Eigen::Vector2d xi_min = min_forces_.segment<2>(2 * i);
+        const Eigen::Vector2d xi_max = max_forces_.segment<2>(2 * i);
+
+        xi_next = xi_next.cwiseMin(xi_max).cwiseMax(xi_min);
+
+        if (xi_next.squaredNorm() > T_MAX2) {
+            xi_next = xi_next.normalized() * T_MAX;
+        }
+
+        kappa.segment<2>(2 * i) = xi_next - xi_i;
     }
+
     return kappa;
 }

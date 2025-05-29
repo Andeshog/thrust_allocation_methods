@@ -56,11 +56,11 @@ thrust_allocation_node:
       p_propeller_rpm_to_command: 1.0  #0.841403
 
     maneuvering:
-      gamma: 15.0
-      mu: 5.0
-      rho: 1.0
+      gamma: 7.5 # 7.5 for power-based # 0.5 for normal
+      mu: 10.0 # 10.0 for power-based
+      rho: 10.0 # 10.0 for power-based
       zeta: 0.05
-      rate_limit: 10.0
+      rate_limit: 25.0 # 25.0 for power-based
       theta_min: -100.0
       theta_max: 100.0
       lambda: 0.0
