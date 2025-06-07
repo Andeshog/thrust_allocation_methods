@@ -131,7 +131,7 @@ VecTheta ManeuveringAllocator::calculate_j_theta(const VecXi& xi_d) const {
             double a_ref = reference_angles_(i);
             Eigen::Vector2d ref_vec(std::cos(a_ref), std::sin(a_ref));
             Eigen::Matrix<double, 2, kThetaSize> Q_i = q_matrix_.block<2, kThetaSize>(2*i, 0);
-            j_theta += c_(i) * Q_i.transpose() * (xi_di/xi_di_norm - lambda_ * ref_vec);
+            j_theta += c_(i) * (xi_di.transpose()/xi_di_norm - lambda_ * ref_vec.transpose()) * Q_i;
         }
         else {
             if (i == 2 || i == 3) { // Rear thrusters
