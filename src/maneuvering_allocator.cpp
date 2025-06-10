@@ -16,11 +16,11 @@ ManeuveringAllocator::ManeuveringAllocator(ManeuveringParams& params)
     {
     c_ << 1.0, 1.0, 1.0, 1.0;
     w_matrix_.setIdentity();
-    min_forces_ << -430.0,  0.1, -430.0, -430.0,
-                    0.1,    0.1,   0.1, -430.0;
+    min_forces_ << -300.0,  0.1, -300.0, -300.0,
+                    0.1,    0.1,   0.1, -300.0;
 
-    max_forces_ <<  -0.1, 430.0,   -0.1,   -0.1,
-                    430.0, 430.0,  430.0,   -0.1;
+    max_forces_ <<  -0.1, 300.0,   -0.1,   -0.1,
+                    300.0, 300.0,  300.0,   -0.1;
     reference_angles_ <<  3*M_PI/4.0,  -3*M_PI/4.0,
                         M_PI/4.0,   -M_PI/4.0;
     constexpr double half_length = 1.8;
