@@ -5,7 +5,7 @@ class QPAllocator:
     def __init__(self,
                  half_length=1.8,
                  half_width=0.8,
-                 u_bound=500.0,
+                 u_bound=300.0,
                  max_rate=1.0,
                  max_force_rate=50.0,
                  W=None,
