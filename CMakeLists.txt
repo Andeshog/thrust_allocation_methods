@@ -61,11 +61,6 @@ ament_python_install_package(${PROJECT_NAME})
 
 install(PROGRAMS
   scripts/thrust_allocation_node.py
-  scripts/thrust_allocation_new_node.py
-  scripts/nlp_node.py
-  scripts/qp_node.py
-  scripts/maneuvering_node.py
-  scripts/thrust_allocation_all.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
