@@ -33,3 +33,4 @@
       w_neg: 10.0
       w_alpha_change: 50000.0
       max_rate: 0.5
+      max_force_rate: 200.0

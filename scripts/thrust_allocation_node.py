@@ -2,7 +2,7 @@
 
 import rclpy
 from rclpy.node import Node
-from thrust_allocation.nlp import NLPAllocator
+from thrust_allocation.nlp import NLPAllocator, NLPParams
 from thrust_allocation.qp import QPAllocator, QPParams
 from thrust_allocation.maneuvering_allocator import ManeuveringAllocator, ManeuveringParams
 from thrust_allocation.pseudo_inverse import PsuedoInverseAllocator
@@ -53,6 +53,14 @@ class ThrustAllocationNode(Node):
         self.declare_parameter('qp.max_force_rate', 0.0)
         self.declare_parameter('qp.beta', 0.0)
 
+        # NLP parameters
+        self.declare_parameter('nlp.w_angle', 0.0)
+        self.declare_parameter('nlp.w_neg', 0.0)
+        self.declare_parameter('nlp.w_alpha_change', 0.0)
+        self.declare_parameter('nlp.max_rate', 0.0)
+        self.declare_parameter('nlp.max_force_rate', 0.0)
+        self.declare_parameter('nlp.u_bound', 0.0)
+
     def init_allocators(self):
         self.pseudo_inverse_allocator_ = PsuedoInverseAllocator()
         maneuvering_params = ManeuveringParams(
@@ -78,7 +86,16 @@ class ThrustAllocationNode(Node):
         )
         self.qp_allocator_ = QPAllocator(qp_params)
 
-        self.nlp_allocator_ = NLPAllocator()
+        nlp_params = NLPParams(
+            dt=self.dt,
+            u_bound=self.get_parameter('nlp.u_bound').value,
+            w_angle=self.get_parameter('nlp.w_angle').value,
+            w_neg=self.get_parameter('nlp.w_neg').value,
+            max_rate=self.get_parameter('nlp.max_rate').value,
+            max_force_rate=self.get_parameter('nlp.max_force_rate').value,
+            w_alpha_change=self.get_parameter('nlp.w_alpha_change').value
+        )
+        self.nlp_allocator_ = NLPAllocator(nlp_params)
 
     def init_subscribers_and_publishers(self):
         tau_topic = self.get_parameter('tau_topic').value
