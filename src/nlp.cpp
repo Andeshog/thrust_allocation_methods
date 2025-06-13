@@ -1,16 +1,13 @@
 #include "thrust_allocation/nlp.hpp"
 
-NLPAllocator::NLPAllocator(double dt)
-    : dt_(dt),
-      n_thrusters_(4),
-      half_length_(1.8),
-      half_width_(0.8),
-      u_bound_(400.0),
-      w_angle_(1000.0),
-      w_neg_(10.0),
-      max_rate_(5.0),
-      max_force_rate_(2000.0),
-      w_alpha_change_(50000.0)
+NLPAllocator::NLPAllocator(NLPParams params)
+    : dt_(params.dt),
+      u_bound_(params.u_bound),
+      w_angle_(params.w_angle),
+      w_neg_(params.w_neg),
+      max_rate_(params.max_rate),
+      max_force_rate_(params.max_force_rate),
+      w_alpha_change_(params.w_alpha_change)
     {
         thruster_positions_ = {{
             { half_length_,  half_width_},   // front-left

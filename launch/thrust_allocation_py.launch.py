@@ -17,8 +17,8 @@ def generate_launch_description():
         allocator_mode,
         Node(
             package='thrust_allocation',
-            executable='thrust_allocation_node',
-            name='thrust_allocation_node_cpp',
+            executable='thrust_allocation_node.py',
+            name='thrust_allocation_node_py',
             output='screen',
             parameters=[config, {'allocator': LaunchConfiguration('allocator')}]
         ),

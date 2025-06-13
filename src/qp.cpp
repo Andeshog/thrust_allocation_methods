@@ -1,6 +1,4 @@
 #include "thrust_allocation/qp.hpp"
-#include <spdlog/spdlog.h>
-#include <spdlog/fmt/ostr.h>
 #include <cmath>
 #include <stdexcept>
 #include <OsqpEigen/OsqpEigen.h>
@@ -12,7 +10,6 @@ constexpr double reg_fb = 1.0e-6;
 QPAllocator::QPAllocator(const QPParameters& params)
     : dt_(params.dt),
       u_bound_(params.u_bound),
-      max_rate_(params.max_rate),
       max_force_rate_(params.max_force_rate),
       beta_(params.beta) {
     const double x[]{ half_length_,  half_length_, -half_length_, -half_length_ };
@@ -49,8 +46,6 @@ QPAllocator::QPAllocator(const QPParameters& params)
 
 std::tuple<Eigen::VectorXd, Eigen::VectorXd, Eigen::VectorXd, Eigen::Vector3d> QPAllocator::allocate(std::array<double, 3> tau_cmd) {
     const double du_max = max_force_rate_ * dt_;
-    // const double dalpha_max = max_rate_ * dt_;
-    // const Eigen::Vector4d dyn_u_lb = (u_prev_.array() - du_max).max(u_lb_.array());
     const Eigen::Vector4d dyn_u_ub = (u_prev_.array() + du_max).min(u_ub_.array());
 
     const Eigen::Vector4d dyn_alpha_lb = static_alpha_lb_;
