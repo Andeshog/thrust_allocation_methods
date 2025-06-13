@@ -8,9 +8,19 @@
 #include <cmath>
 #include <tuple>
 
+struct NLPParams {
+    double dt = 0.01;
+    double u_bound = 400.0;
+    double w_angle = 1000.0;
+    double w_neg = 10.0;
+    double max_rate = 0.5;
+    double max_force_rate = 200.0;
+    double w_alpha_change = 50000.0;
+};
+
 class NLPAllocator {
 public:
-    NLPAllocator(double dt);
+    NLPAllocator(NLPParams params);
 
     std::tuple<Eigen::Vector4d, Eigen::Vector4d, Eigen::Vector3d> allocate(
         const std::array<double, 3>& tau_desired);
@@ -18,9 +28,9 @@ private:
     void build_nlp();
     
     double dt_;
-    const std::size_t n_thrusters_;
-    double half_length_;
-    double half_width_;
+    const std::size_t n_thrusters_ = 4;
+    double half_length_ = 1.8;
+    double half_width_ = 0.8;
     double u_bound_;
     double w_angle_;
     double w_neg_;

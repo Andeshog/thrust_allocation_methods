@@ -8,7 +8,6 @@
 struct QPParameters {
     double dt = 0.01;
     double u_bound = 500.0;
-    double max_rate = 1.0;
     double max_force_rate = 50.0;
     double beta = 1.1;
 };
