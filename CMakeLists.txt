@@ -12,7 +12,6 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
-find_package(custom_msgs REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(casadi REQUIRED)
 find_package(fmt REQUIRED)
@@ -38,7 +37,7 @@ target_include_directories(thrust_allocation_node PUBLIC
 ament_target_dependencies(thrust_allocation_node
 rclcpp
 geometry_msgs
-custom_msgs
+std_msgs
 casadi
 fmt
 spdlog
