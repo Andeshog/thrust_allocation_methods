@@ -3,7 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from thrust_allocation.nlp import NLPAllocator
-from thrust_allocation.qp import QPAllocator
+from thrust_allocation.qp import QPAllocator, QPParams
 from thrust_allocation.maneuvering_allocator import ManeuveringAllocator, ManeuveringParams
 from thrust_allocation.pseudo_inverse import PsuedoInverseAllocator
 from geometry_msgs.msg import WrenchStamped
@@ -48,6 +48,11 @@ class ThrustAllocationNode(Node):
         self.declare_parameter('maneuvering_params.max_force', 0.0)
         self.declare_parameter('maneuvering_params.power_management', False)
 
+        # QP parameters
+        self.declare_parameter('qp.u_bound', 0.0)
+        self.declare_parameter('qp.max_force_rate', 0.0)
+        self.declare_parameter('qp.beta', 0.0)
+
     def init_allocators(self):
         self.pseudo_inverse_allocator_ = PsuedoInverseAllocator()
         maneuvering_params = ManeuveringParams(
@@ -65,8 +70,15 @@ class ThrustAllocationNode(Node):
         )
         self.maneuvering_allocator_ = ManeuveringAllocator(maneuvering_params)
 
+        qp_params = QPParams(
+            dt=self.dt,
+            u_bound=self.get_parameter('qp.u_bound').value,
+            max_force_rate=self.get_parameter('qp.max_force_rate').value,
+            beta=self.get_parameter('qp.beta').value
+        )
+        self.qp_allocator_ = QPAllocator(qp_params)
+
         self.nlp_allocator_ = NLPAllocator()
-        self.qp_allocator_ = QPAllocator()
 
     def init_subscribers_and_publishers(self):
         tau_topic = self.get_parameter('tau_topic').value
@@ -80,17 +92,17 @@ class ThrustAllocationNode(Node):
 
     def timer_callback(self):
         if self.allocator_mode == 'nlp':
-            alpha, u, tau_actual = self.nlp_allocator_.allocate(self.tau, self.dt)
+            alpha, u, tau_actual = self.nlp_allocator_.allocate(self.tau)
         
         elif self.allocator_mode == 'pseudo_inverse':
             u, tau_actual = self.pseudo_inverse_allocator_.allocate(self.tau)
             alpha = np.array([3*np.pi/4, -3*np.pi/4, np.pi/4, -np.pi/4])
 
         elif self.allocator_mode == 'qp':
-            f_ext, u, alpha, tau_actual = self.qp_allocator_.allocate(self.tau, self.dt)
+            f_ext, u, alpha, tau_actual = self.qp_allocator_.allocate(self.tau)
 
         elif self.allocator_mode == 'maneuvering':
-            xi_p, _, _, _ = self.qp_allocator_.allocate(self.tau, self.dt)
+            xi_p, _, _, _ = self.qp_allocator_.allocate(self.tau)
             f_ext, u, alpha, tau_actual = self.maneuvering_allocator_.allocate(self.tau, xi_p)
         
         else:

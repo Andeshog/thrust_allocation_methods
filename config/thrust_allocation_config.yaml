@@ -5,7 +5,7 @@
       loop_rate: 100.0 # Hz
     py:
       dt: 0.1 # seconds
-      
+
     min_force: -500
 
     tau_topic: "tau_cmd"
@@ -24,7 +24,6 @@
 
     qp:
       u_bound: 300.0
-      max_rate: 1.0
       max_force_rate: 100.0
       beta: 1.1
 
