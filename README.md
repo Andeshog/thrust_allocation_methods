@@ -20,3 +20,17 @@ There are five methods:
 - __Power-aware maneuvering-based__: An implementation of the maneuvering-based method where the secondary objective is to minimize the power consumption by utilizing the most power-efficient thrust direction of each thruster. 
 
 ### Usage
+(It is assumed that the user is familiar with ROS 2 and the build system, if not check out [the ROS 2 docs](https://docs.ros.org/en/humble/Tutorials/Beginner-Client-Libraries/Creating-A-Workspace/Creating-A-Workspace.html).)
+
+Configure the parameters in [config](config/thrust_allocation_config.yaml).
+
+The Python node can be launched with
+```bash
+ros2 launch thrust_allocation thrust_allocation_py.launch.py allocator:=XXX
+```
+where `allocator` can be pseudo_inverse, maneuvering, nlp, or qp, and it will default to pseudo_inverse.
+
+The C++ node can be launched in a similar way
+```bash
+ros2 launch thrust_allocation thrust_allocation_cpp.launch.py allocator:=XXX
+```
