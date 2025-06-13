@@ -1,6 +1,4 @@
 #include "thrust_allocation/maneuvering_allocator.hpp"
-#include <spdlog/spdlog.h>
-#include <spdlog/fmt/ostr.h>
 
 ManeuveringAllocator::ManeuveringAllocator(ManeuveringParams& params)
     : dt_(params.dt),

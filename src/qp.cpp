@@ -1,6 +1,4 @@
 #include "thrust_allocation/qp.hpp"
-#include <spdlog/spdlog.h>
-#include <spdlog/fmt/ostr.h>
 #include <cmath>
 #include <stdexcept>
 #include <OsqpEigen/OsqpEigen.h>

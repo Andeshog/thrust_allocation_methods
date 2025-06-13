@@ -7,7 +7,6 @@
 #include "thrust_allocation/qp.hpp"
 #include "thrust_allocation/pseudo_inverse.hpp"
 #include <geometry_msgs/msg/wrench_stamped.hpp>
-#include <custom_msgs/msg/actuator_setpoints.hpp>
 #include <std_msgs/msg/string.hpp>
 #include <std_msgs/msg/float64_multi_array.hpp>
 
