@@ -4,7 +4,7 @@ import rclpy
 from rclpy.node import Node
 from thrust_allocation.nlp import NLPAllocator
 from thrust_allocation.qp import QPAllocator
-from thrust_allocation.maneuvering_allocator import ManeuveringAllocator
+from thrust_allocation.maneuvering_allocator import ManeuveringAllocator, ManeuveringParams
 from thrust_allocation.pseudo_inverse import PsuedoInverseAllocator
 from geometry_msgs.msg import WrenchStamped
 from std_msgs.msg import Float64MultiArray
@@ -15,13 +15,9 @@ class ThrustAllocationNode(Node):
         super().__init__('thrust_allocation_node_py')
 
         self.tau = np.zeros(3)
-        
-        self.pseudo_inverse_allocator_ = PsuedoInverseAllocator()
-        self.nlp_allocator_ = NLPAllocator()
-        self.qp_allocator_ = QPAllocator()
-        self.maneuvering_allocator_ = ManeuveringAllocator()
 
         self.init_params()
+        self.init_allocators()
         self.init_topics()
         self.init_subscribers_and_publishers()
 
@@ -39,6 +35,38 @@ class ThrustAllocationNode(Node):
 
         self.declare_parameter('allocator', 'pseudo_inverse')
         self.allocator_mode = self.get_parameter('allocator').value
+
+        # Maneuvering parameters
+        self.declare_parameter('maneuvering_params.gamma', 0.0)
+        self.declare_parameter('maneuvering_params.mu', 0.0)
+        self.declare_parameter('maneuvering_params.rho', 0.0)
+        self.declare_parameter('maneuvering_params.zeta', 0.0)
+        self.declare_parameter('maneuvering_params.lambda_', 0.0)
+        self.declare_parameter('maneuvering_params.rate_limit', 0.0)
+        self.declare_parameter('maneuvering_params.theta_min', 0.0)
+        self.declare_parameter('maneuvering_params.theta_max', 0.0)
+        self.declare_parameter('maneuvering_params.max_force', 0.0)
+        self.declare_parameter('maneuvering_params.power_management', False)
+
+    def init_allocators(self):
+        self.pseudo_inverse_allocator_ = PsuedoInverseAllocator()
+        maneuvering_params = ManeuveringParams(
+            dt=self.dt,
+            gamma=self.get_parameter('maneuvering_params.gamma').value,
+            mu=self.get_parameter('maneuvering_params.mu').value,
+            rho=self.get_parameter('maneuvering_params.rho').value,
+            zeta=self.get_parameter('maneuvering_params.zeta').value,
+            lambda_=self.get_parameter('maneuvering_params.lambda_').value,
+            rate_limit=self.get_parameter('maneuvering_params.rate_limit').value,
+            theta_min=self.get_parameter('maneuvering_params.theta_min').value,
+            theta_max=self.get_parameter('maneuvering_params.theta_max').value,
+            max_force=self.get_parameter('maneuvering_params.max_force').value,
+            power_management=self.get_parameter('maneuvering_params.power_management').value
+        )
+        self.maneuvering_allocator_ = ManeuveringAllocator(maneuvering_params)
+
+        self.nlp_allocator_ = NLPAllocator()
+        self.qp_allocator_ = QPAllocator()
 
     def init_subscribers_and_publishers(self):
         tau_topic = self.get_parameter('tau_topic').value
@@ -63,8 +91,7 @@ class ThrustAllocationNode(Node):
 
         elif self.allocator_mode == 'maneuvering':
             xi_p, _, _, _ = self.qp_allocator_.allocate(self.tau, self.dt)
-            self.get_logger().info(f"theta: {self.maneuvering_allocator_.theta}")
-            f_ext, u, alpha, tau_actual = self.maneuvering_allocator_.allocate(self.tau, xi_p, self.dt)
+            f_ext, u, alpha, tau_actual = self.maneuvering_allocator_.allocate(self.tau, xi_p)
         
         else:
             self.get_logger().error(f"Invalid allocator mode: {self.allocator_mode}")
